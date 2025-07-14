@@ -254,9 +254,8 @@
                                 $('.appendBtn').empty();
 
                                 let baseUrl = "{{ route('extra.bed', [':hotelId', ':roomType']) }}"
-                                    .replace(':hotelId', response.hotelId).replace(':roomType', response
-                                        .roomType);
-                                var btn = `<a href="${baseUrl}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
+                                    .replace(':hotelId', response.hotelId).replace(':roomType', response.roomType);
+                                      var btn = `<a href="${baseUrl}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
                                           data-bs-toggle="modal"
                                          data-bs-target="#global_modal"
                                          data-bs-whatever="Add Extra Bed"
@@ -336,11 +335,15 @@
                         'input[name=markup_cp]').val());
                     let MAP = parseFloat(_form.find('input[name=b2b_rate_map]').val()) + parseFloat(_form.find(
                         'input[name=markup_map]').val() ?? 0);
+                    let AP = parseFloat(_form.find('input[name=b2b_rate_ap]').val()) + parseFloat(_form.find(
+                        'input[name=markup_ap]').val() ?? 0);
                     let availability = parseFloat(_form.find('input[name=availability]').val() ?? 0);
                     var rates = {
                         'EP': EP,
                         'CP': CP,
-                        'MAP': MAP
+                        'MAP': MAP,
+                         'AP': AP
+
                     };
                     for (var type in rates) {
                         var rate = rates[type];

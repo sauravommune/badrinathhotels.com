@@ -47,27 +47,27 @@ class BookingRepository extends BaseRepository
                 ]);
             }
         }
-        
+
         if (isset($request['child_full_name']) && count($request['child_full_name']) > 0) {
             foreach ($request['child_full_name'] as $index => $childName) {
                 if (!empty($childName)) {
 
-                    $dobString = $request['child_year'][$index].'-'.$request['child_month'][$index].'-'.$request['child_date'][$index];
+                    $dobString = $request['child_year'][$index] . '-' . $request['child_month'][$index] . '-' . $request['child_date'][$index];
                     $dob = new DateTime($dobString);
                     $dob = $dob->format('Y-m-d');
                     TravellerDetails::create([
                         'booking_id' => $add_booking,
                         'name' => $childName,
-                        'email' => '', 
+                        'email' => '',
                         'gender' => $request['child_gender'][$index],
-                        'dob' =>$dob
+                        'dob' => $dob
                     ]);
                 }
             }
         }
         return $add_booking;
     }
-  
+
     public function bookingDetails($bookingId)
     {
         $booking = Booking::where('booking_id', $bookingId)->first();
@@ -77,54 +77,52 @@ class BookingRepository extends BaseRepository
     public function getCouponAmount($couponId, $amount)
     {
         $coupon = Coupons::select('id', 'code', 'title', 'description', 'type', 'value', 'auto_apply', 'is_visible')->where('id', $couponId)->first();
-        if( empty($coupon) ) {
+        if (empty($coupon)) {
             return 0;
         }
         return $coupon->type === 'percent'
-                ? ($amount * $coupon->value) / 100
-                : $coupon->value;
+            ? ($amount * $coupon->value) / 100
+            : $coupon->value;
     }
 
     public function manageBooking()
-    { 
+    {
         $bookingData = [];
         if (request('bookingId')) {
             if (request()->expectsJson()) {
                 $bookingId = request('bookingId');
-
-            }else{
+            } else {
                 $bookingId = base64_decode(request('bookingId'));
-
             }
-            $booking_data = Booking::with(['hotel.amenities'=>function($query){
-                $query->orderBy('id','desc')->limit(6);
-            },'bookedRooms.roomDetails','bookingTraveler', 'bookingContact', 'transactions', 'payments'])->where('booking_id',$bookingId )->first();
+            $booking_data = Booking::with(['hotel.amenities' => function ($query) {
+                $query->orderBy('id', 'desc')->limit(6);
+            }, 'bookedRooms.roomDetails', 'bookingTraveler', 'bookingContact', 'transactions', 'payments'])->where('booking_id', $bookingId)->first();
             $nights = (strtotime($booking_data->check_out_date) - strtotime($booking_data->check_in_date)) / (60 * 60 * 24);
 
             $bookingData =  [
                 'details' => $booking_data,
                 'nights'   => ($nights == 0 ? 1 : $nights),
-                'totalRoom' =>$booking_data->bookedRooms->pluck('quantity')->sum(),
-                'totalGuest'=> $booking_data->total_guest,
-                'totalAmount'=> $booking_data->bookedRooms->pluck('total_price')->sum(),
-               'hotelAmenity' => $booking_data->hotel->amenities->map(function ($amenity) {
-                return [
-                       'id'   => $amenity->id,
-                       'name' => $amenity?->amenityName?->name??"",  // extra key for api hotel amenity
-                       ];
-                     }), 
+                'totalRoom' => $booking_data->bookedRooms->pluck('quantity')->sum(),
+                'totalGuest' => $booking_data->total_guest,
+                'totalAmount' => $booking_data->bookedRooms->pluck('total_price')->sum(),
+                'hotelAmenity' => $booking_data->hotel->amenities->map(function ($amenity) {
+                    return [
+                        'id'   => $amenity->id,
+                        'name' => $amenity?->amenityName?->name ?? "",  // extra key for api hotel amenity
+                    ];
+                }),
                 'roomAmenity' => $booking_data->bookedRooms->map(function ($room) {
-                 return [
-                    'room_id'    => $room->id,
-                    'amenities'  => $room->roomDetails->addAmenity->map(function ($amenity) {
-                        return [
-                            'id'   => $amenity->id,
-                            'name' => $amenity?->amenityName?->name ?? '', // extra key for api room amenity
-                        ];
-                    }),
-                ];
-                }), 
-            ];   
+                    return [
+                        'room_id'    => $room->id,
+                        'amenities'  => $room->roomDetails->addAmenity->map(function ($amenity) {
+                            return [
+                                'id'   => $amenity->id,
+                                'name' => $amenity?->amenityName?->name ?? '', // extra key for api room amenity
+                            ];
+                        }),
+                    ];
+                }),
+            ];
 
             return $bookingData;
         }
@@ -132,6 +130,8 @@ class BookingRepository extends BaseRepository
 
     public function addMultipleBooking($request)
     {
+
+        // dd($request->all());
 
         $searchId       = $request->search_id;
         $searchData     = SearchLog::findOrFail($searchId);
@@ -155,11 +155,10 @@ class BookingRepository extends BaseRepository
         $booking->check_out_date        = $checkOut;
         $booking->special_requirements  = $request->specialRequirements ?? '';
         $booking->arrival_time          = $request->arrival_time;
-        if(session()->has('referral_code')){
+        if (session()->has('referral_code')) {
             $affiliate_code = session('referral_code');
-            $affiliate_user = User::where('affiliate_code',$affiliate_code)->first(['id','affiliate_code']);
+            $affiliate_user = User::where('affiliate_code', $affiliate_code)->first(['id', 'affiliate_code']);
             $booking->referred_by = $affiliate_user->id;
-            
         }
         $booking->save();
         session()->forget('referral_code');
@@ -172,7 +171,7 @@ class BookingRepository extends BaseRepository
 
         foreach ($request->roomId as $key => $roomId) {
             $roomDetails = Room::with(['ratePlan' => function ($query) use ($checkIn, $checkOut) {
-                $query->where('pricing_date','>=',$checkIn)->where('pricing_date','<',$checkOut);
+                $query->where('pricing_date', '>=', $checkIn)->where('pricing_date', '<', $checkOut);
             }])->find($roomId);
 
             $category   = $request->category[$key];
@@ -180,50 +179,63 @@ class BookingRepository extends BaseRepository
             $totalPrice = $totalCost = $totalMarkup = 0;
 
             if ($roomDetails && $roomDetails->ratePlan->isNotEmpty()) {
-                
+
                 $ratePlanCount = $roomDetails->ratePlan->count();
-                $totalAmountEp = $roomDetails->ratePlan->sum('total_amount_ep') / $ratePlanCount ;
+
+                $totalAmountEp = $roomDetails->ratePlan->sum('total_amount_ep') / $ratePlanCount;
                 $totalAmountCp = $roomDetails->ratePlan->sum('total_amount_cp') / $ratePlanCount;
-                $totalAmountMap = $roomDetails->ratePlan->sum('total_amount_map') / $ratePlanCount;
+                $totalAmountMAP = $roomDetails->ratePlan->sum('total_amount_map') / $ratePlanCount;
+                $totalAmountAP = $roomDetails->ratePlan->sum('total_amount_ap') / $ratePlanCount;
+
 
                 $totalCostEP = $roomDetails->ratePlan->sum('b2b_rate_ep') / $ratePlanCount;
                 $totalCostCP = $roomDetails->ratePlan->sum('b2b_rate_cp') / $ratePlanCount;
                 $totalCostMAP = $roomDetails->ratePlan->sum('b2b_rate_map') / $ratePlanCount;
+                $totalCostAP = $roomDetails->ratePlan->sum('b2b_rate_ap') / $ratePlanCount;
+
 
                 $totalMarkupEP = $roomDetails->ratePlan->sum('markup_ep') / $ratePlanCount;
                 $totalMarkupCP = $roomDetails->ratePlan->sum('markup_cp') / $ratePlanCount;
                 $totalMarkupMAP = $roomDetails->ratePlan->sum('markup_map') / $ratePlanCount;
+                $totalMarkupAP = $roomDetails->ratePlan->sum('markup_ap') / $ratePlanCount;
 
-                 //start code  Extra person bedPrice 
 
-                if ($roomDetails->ratePlan->count() > 0 && $roomDetails->ratePlan) {
-                    $ratePlan = $roomDetails->ratePlan;
+                // start code  Extra person bedPrice 
 
-                    // EP: Room Only
-                    $personExtraBedPriceEp = personExtraBedPriceEp($ratePlan);
+                // if ($roomDetails->ratePlan->count() > 0 && $roomDetails->ratePlan) {
+                //     $ratePlan = $roomDetails->ratePlan;
 
-                    $totalAmountEp  = $totalAmountEp  + $personExtraBedPriceEp['ep_total_extra_person_price']??0;
-                    $totalCostEP    = $totalCostEP    + $personExtraBedPriceEp['ep_extra_person_price']??0;
-                    $totalMarkupEP  = $totalMarkupEP  + $personExtraBedPriceEp['ep_extra_person_markup']??0;
+                //     // EP: Room Only
+                //     $personExtraBedPriceEp = personExtraBedPriceEp($ratePlan);
 
-                    // CP: With Breakfast
-                    $personExtraBedPriceCp = personExtraBedPriceCp($ratePlan);
-                    $totalAmountCp  = $totalAmountCp  + $personExtraBedPriceCp['cp_total_extra_person_price']??0;
-                    $totalCostCP    = $totalCostCP    + $personExtraBedPriceCp['cp_extra_person_price']??0;
-                    $totalMarkupCP  = $totalMarkupCP  + $personExtraBedPriceCp['cp_extra_person_markup']??0;
-                    // MAP: With Breakfast + Dinner
-                    $personExtraBedPriceMap = personExtraBedPriceMap($ratePlan);
-                    $totalAmountMap  = $totalAmountMap  + $personExtraBedPriceMap['map_total_extra_person_price']??0;
-                    $totalCostMAP    = $totalCostMAP    + $personExtraBedPriceMap['map_extra_person_price']??0;
-                    $totalMarkupMAP  = $totalMarkupMAP  + $personExtraBedPriceMap['map_extra_person_markup']??0;
+                //     $totalAmountEp  = $totalAmountEp  + $personExtraBedPriceEp['ep_total_extra_person_price'] ?? 0;
+                //     $totalCostEP    = $totalCostEP    + $personExtraBedPriceEp['ep_extra_person_price'] ?? 0;
+                //     $totalMarkupEP  = $totalMarkupEP  + $personExtraBedPriceEp['ep_extra_person_markup'] ?? 0;
 
-                }
+                //     // CP: With Breakfast
+                //     $personExtraBedPriceCp = personExtraBedPriceCp($ratePlan);
+                //     $totalAmountCp  = $totalAmountCp  + $personExtraBedPriceCp['cp_total_extra_person_price'] ?? 0;
+                //     $totalCostCP    = $totalCostCP    + $personExtraBedPriceCp['cp_extra_person_price'] ?? 0;
+                //     $totalMarkupCP  = $totalMarkupCP  + $personExtraBedPriceCp['cp_extra_person_markup'] ?? 0;
 
-                //end code  Extra person bedPrice 
+                //     // MAP: With Breakfast + Dinner
+                //     $personExtraBedPriceMap = personExtraBedPriceMap($ratePlan);
+                //     $totalAmountMAP  = $totalAmountMAP  + $personExtraBedPriceMap['map_total_extra_person_price'] ?? 0;
+                //     $totalCostMAP    = $totalCostMAP    + $personExtraBedPriceMap['map_extra_person_price'] ?? 0;
+                //     $totalMarkupMAP  = $totalMarkupMAP  + $personExtraBedPriceMap['map_extra_person_markup'] ?? 0;
+
+                //     // AP: With Breakfast + Dinner +Lunch
+                //     $personExtraBedPriceAp = personExtraBedPriceAp($ratePlan);
+                //     $totalAmountAP  = $totalAmountAP  + $personExtraBedPriceAp['ap_total_extra_person_price'] ?? 0;
+                //     $totalCostAP    = $totalCostAP   + $personExtraBedPriceAp['ap_extra_person_price'] ?? 0;
+                //     $totalMarkupAP  = $totalMarkupAP  + $personExtraBedPriceAp['ap_extra_person_markup'] ?? 0;
+                // }
+
+                // end code  Extra person bedPrice 
 
                 switch ($category) {
                     case 'Room Only':
-                        
+
                         $totalPrice = $totalAmountEp * $nights;
                         $totalCost = $totalCostEP * $nights;
                         $totalMarkup = $totalMarkupEP * $nights;
@@ -234,9 +246,14 @@ class BookingRepository extends BaseRepository
                         $totalMarkup = $totalMarkupCP * $nights;
                         break;
                     case 'With Breakfast Dinner':
-                        $totalPrice = $totalAmountMap * $nights;
+                        $totalPrice = $totalAmountMAP* $nights;
                         $totalCost = $totalCostMAP * $nights;
                         $totalMarkup = $totalMarkupMAP * $nights;
+                        break;
+                    case 'With Breakfast Lunch Dinner':
+                        $totalPrice = $totalAmountAP * $nights;
+                        $totalCost = $totalCostAP * $nights;
+                        $totalMarkup = $totalMarkupAP * $nights;
                         break;
                 }
             }
@@ -264,7 +281,7 @@ class BookingRepository extends BaseRepository
     public function updateBookingStatus(Request $request)
     {
         $bookingDetails = Booking::where('booking_id', $request->booking_id)->first();
-        
+
         $oldData = [
             'status' => $bookingDetails->status,
         ];
@@ -288,5 +305,4 @@ class BookingRepository extends BaseRepository
         $bookingDetails->status = 'cancelled';
         return $bookingDetails->save();
     }
-
 }

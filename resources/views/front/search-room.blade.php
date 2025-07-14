@@ -1,10 +1,12 @@
+{{-- @dd($allAvailableRoom) --}}
 @if (isset($allAvailableRoom) && !empty($allAvailableRoom))
     @foreach ($allAvailableRoom as $index =>$room)
   
     {{-- @dd(checkImageExists($room['rooms']['roomImages'])); --}}
     @if($room['rooms']['roomImages']->count() >0 && checkImageExists($room['rooms']['roomImages']))
         <span id="hotelId" data-hotel_id="{{$room['rooms']?->hotel_id}}"></span>
-           <span class="nights" data-nights="{{$room['nights']}}"></span>
+        <span class="nights" data-nights="{{$room['nights']}}"></span>
+
         <div class="main-box mb-xl-3 mb-3 bor">
             <div class="row g-0">
                 <div class="col-12 col-sm-12 col-md-12 col-lg-12 col-xl-4">
@@ -61,7 +63,7 @@
                     <div class="modal-dialog modal-lg modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header w-100">
-                                <div class=" w-100 position-relative room-section">
+                                <div class=" w-100 position-relative">
                                     <h4 class="modal-title ">{{ ucwords($room['rooms']?->hotel?->name) ?? '' }}</h4>
                                     <button type="button" class="btn-close position-absolute top-0 end-0" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
@@ -102,6 +104,11 @@
                                 'title' => 'With Breakfast, Dinner (MAP Plan)',
                                 'category' => 'With Breakfast Dinner',
                                 'id' => 'break-fast-dinner-box'
+                                ],
+                                'total_price_with_break_fast_lunch_and_dinner' => [
+                                'title' => 'With Breakfast, Lunch ,Dinner (AP Plan)',
+                                'category' => 'With Breakfast Lunch Dinner',
+                                'id' => 'break-fast-lunch-dinner-box'
                                 ],
                             ]
                         @endphp

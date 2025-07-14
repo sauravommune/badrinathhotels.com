@@ -27,9 +27,23 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
 
-        return [
+        $rules = [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+        ];
+
+        if (app()->environment() !== 'local') {
+            $rules['g-recaptcha-response'] =  ['required', 'recaptchav3:login,0.5'];
+        }
+
+        return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'g-recaptcha-response.required' => 'Please verify that you are not a robot.',
+            'g-recaptcha-response.recaptchav3' => 'reCAPTCHA verification failed. Please try again.',
         ];
     }
 
@@ -40,7 +54,7 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
-        
+
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
@@ -82,6 +96,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }
