@@ -341,6 +341,8 @@ Route::middleware(['auth', 'restrict_user'])->group(function () {
         Route::get('save/{id?}',[CityController::class,'save'])->name('add.city');
         Route::post('add',[CityController::class,'create'])->name('save.city');
         Route::delete('delete-city/{id}',[CityController::class,'deleteCity'])->name('delete.city');
+        Route::post('/update-status', [CityController::class, 'updateStatus'])->name('update.city.status');
+
 
         Route::get('room-category',[RoomCategoryController::class,'roomCategory'])->name('list.room_category');
         Route::get('save-room-category/{id?}',[RoomCategoryController::class,'saveRoomCategory'])->name('add.room_category');
