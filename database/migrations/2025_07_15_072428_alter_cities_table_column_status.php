@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('cities', function (Blueprint $table) {
+         Schema::table('cities', function (Blueprint $table) {
             
-            $table->boolean('status')->default(1)->comment('1 is enable; 2 is disable');
+            $table->boolean('status')->default(1)->comment('1 is enable; 0 is disable');
         });
     }
 

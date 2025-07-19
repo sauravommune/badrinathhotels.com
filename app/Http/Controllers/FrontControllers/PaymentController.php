@@ -39,6 +39,8 @@ class PaymentController extends Controller
             $couponAmount = $bookingRepository->getCouponAmount($bookingDetails->coupon_id, $amount);
             $payableAmount = $amount - $couponAmount;
 
+            // dd($amount,$payableAmount,$vendorCost,$markup);
+
             $razorpayConfig = AdminSettings::select('id', 'payment_gateways')->first();
             if (isset($razorpayConfig->payment_gateways['razorpay'])) {
                 $razorpayConfig = $razorpayConfig->payment_gateways['razorpay'];
@@ -188,9 +190,7 @@ class PaymentController extends Controller
         });
 
         foreach ($quantitiesByRoom as $roomId => $totalQuantity) {
-            RatePlan::where('hotel_id', $hotel_id)->where('room_type', $roomId)
-                ->where('pricing_date', '>=', $checkIn)->where('pricing_date', '<', $checkOut)
-                ->update(['availability' => DB::raw("GREATEST(availability - $totalQuantity, 0)")]);
+            RatePlan::where('hotel_id', $hotel_id)->where('room_type', $roomId)->where('pricing_date', '>=', $checkIn)->where('pricing_date', '<', $checkOut)->update(['availability' => DB::raw("GREATEST(availability - $totalQuantity, 0)")]);
         }
     }
 }
